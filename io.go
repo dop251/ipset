@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"reflect"
 	"unsafe"
 )
 
@@ -47,10 +46,7 @@ func (s *ipsetBase) Deserialize(r io.Reader) error {
 }
 
 func (s *ipsetBase) bytesNative() []byte {
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&s.nodes))
-	header.Len *= 4
-	header.Cap = header.Len
-	return *(*[]byte)(unsafe.Pointer(&header))
+	return unsafe.Slice((*byte)(unsafe.Pointer(&s.nodes[0])), len(s.nodes)*4)
 }
 
 func (s *ipsetBase) bytesGeneric() []byte {
