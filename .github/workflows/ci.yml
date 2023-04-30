@@ -35,7 +35,7 @@ jobs:
         uses: docker/setup-qemu-action@v2
         with:
           image: tonistiigi/binfmt:master
-          platforms: mips
+          platforms: s390x
       - name: Run Tests in QEMU
         env:
           GOARCH: mips
