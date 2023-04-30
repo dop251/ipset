@@ -38,6 +38,6 @@ jobs:
           platforms: s390x
       - name: Run Tests in QEMU
         env:
-          GOARCH: mips
+          GOARCH: s390x
         run: go test -vet=off ./...
 
