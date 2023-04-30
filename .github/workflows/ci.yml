@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [1.19.x, 1.x]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Check formatting
+        run: diff -u <(echo -n) <(gofmt -d .)
+        if: ${{ matrix.go-version == '1.x' }}
+      - name: Run go vet
+        run: go vet ./...
+      - name: Run staticcheck
+        uses: dominikh/staticcheck-action@v1.3.0
+        with:
+          version: "2023.1.2"
+          install-go: false
+          cache-key: ${{ matrix.go-version }}
+        if: ${{ matrix.go-version == '1.x' }}
+      - name: Run Native Tests
+        run: go test -vet=off ./...
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          image: tonistiigi/binfmt:master
+          platforms: mips
+      - name: Run Tests in QEMU
+        env:
+          GOARCH: mips
+        run: go test -vet=off ./...
+
