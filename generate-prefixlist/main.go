@@ -44,22 +44,20 @@ func downloadDB() error {
 
 func extractDB() (err error) {
 	var z *zip.ReadCloser
-	for i := 0; i < 1; i++ {
-		z, err = zip.OpenReader(filepath.Join(workPath, zipName))
-		if err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				err = downloadDB()
-				if err != nil {
-					return
-				}
-				continue
+	z, err = zip.OpenReader(filepath.Join(workPath, zipName))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			err = downloadDB()
+			if err != nil {
+				return
 			}
+			z, err = zip.OpenReader(filepath.Join(workPath, zipName))
+			if err != nil {
+				return
+			}
+		} else {
 			return
 		}
-		break
-	}
-	if z == nil {
-		return
 	}
 
 	defer z.Close()

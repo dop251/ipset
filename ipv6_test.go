@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/netip"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -93,4 +94,25 @@ func TestIPv6Large(t *testing.T) {
 	var st stats
 	s.gatherStats(s.nodes[1], &st)
 	t.Logf("%#v", st)
+}
+
+func TestIPSet6_WriteTextTo(t *testing.T) {
+	var s IPSet6
+	s.Add(netip.MustParseAddr("2001:668:0:2::1:5111").As16(), 128)
+	s.Add(netip.MustParseAddr("2001:668:0:2:ffff:0:5995:800d").As16(), 128)
+	s.Add(netip.MustParseAddr("2001:668:0:2:ffff:0:5995:8016").As16(), 128)
+	s.Add(netip.MustParseAddr("2003::").As16(), 16)
+	s.Add(netip.MustParseAddr("f102:0304:0506:0708:090a:0b0c:0d0e:0f10").As16(), 128)
+
+	var b strings.Builder
+	n, err := s.WriteTextTo(&b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != int64(b.Len()) {
+		t.Fatal(n)
+	}
+	if str := b.String(); str != "2001:668:0:2::1:5111/128\n2001:668:0:2:ffff:0:5995:800d/128\n2001:668:0:2:ffff:0:5995:8016/128\n2003::/16\nf102:304:506:708:90a:b0c:d0e:f10/128\n" {
+		t.Fatal(str)
+	}
 }

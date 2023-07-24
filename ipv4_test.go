@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/netip"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -232,6 +233,24 @@ func TestIPv4Large(t *testing.T) {
 	s.gatherStats(s.nodes[1], &st)
 	t.Log("Hits: ", hits)
 	t.Logf("%#v", st)
+}
+
+func TestIPSet4_WriteTextTo(t *testing.T) {
+	var s IPSet4
+	s.Add(0x7F_00_00_00, 8)
+	s.Add(0x80_00_00_00, 16)
+	s.Add(0x01_02_03_04, 32)
+	var b strings.Builder
+	n, err := s.WriteTextTo(&b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != int64(b.Len()) {
+		t.Fatal(n)
+	}
+	if str := b.String(); str != "1.2.3.4/32\n127.0.0.0/8\n128.0.0.0/16\n" {
+		t.Fatal(str)
+	}
 }
 
 /*

@@ -8,6 +8,8 @@ import (
 	"net/netip"
 )
 
+type IterStepFunc func(prefix netip.Prefix) (continueIteration bool)
+
 type IPSet struct {
 	s4 IPSet4
 	s6 IPSet6
@@ -62,4 +64,26 @@ func (s *IPSet) Serialize(w io.Writer) error {
 func (s *IPSet) Compact() {
 	s.s4.Compact()
 	s.s6.Compact()
+}
+
+// Iterate calls the step function for each prefix within the set.
+// If the step function returns false, the iteration stops and the function returns false, otherwise
+// it returns true after all nodes are traversed.
+// The step function must not modify the set.
+func (s *IPSet) Iterate(step IterStepFunc) bool {
+	return s.s4.Iterate(step) && s.s6.Iterate(step)
+}
+
+// WriteTextTo writes a textual representation of the IP set to the provided Writer.
+// The text will contain one prefix per line, separated by '\n'. The order is not guaranteed to match the order
+// in which the prefixes were added. Some contiguous prefixes may be merged.
+// There will be one w.Write() call per prefix, so it is advisable to provide a buffered Writer.
+func (s *IPSet) WriteTextTo(w io.Writer) (n int64, err error) {
+	n, err = s.s4.WriteTextTo(w)
+	if err != nil {
+		return
+	}
+	n1, err := s.s6.WriteTextTo(w)
+	n += n1
+	return
 }
